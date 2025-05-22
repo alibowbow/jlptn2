@@ -1120,8 +1120,8 @@
             currentWordIndex = Math.floor(Math.random() * words.length);
             const word = words[currentWordIndex];
             document.getElementById('wordJapanese').textContent = word.japanese;
-            document.getElementById('wordReading').textContent = `읽는 법: ${word.reading}`;
-            document.getElementById('wordKorean').textContent = `뜻: ${word.korean}`;
+            document.getElementById('wordReading').textContent = `${word.reading}`;
+            document.getElementById('wordKorean').textContent = `${word.korean}`;
             
             // Ensure card front is shown and back is hidden
             document.querySelector('#studySection .word-front').classList.remove('hidden');
