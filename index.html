@@ -98,11 +98,11 @@
             text-align: center;
             min-height: 220px;
             position: relative;
-            perspective: 1000px;
+            perspective: 1000px; /* For 3D effect, though transition is removed in auto mode */
         }
 
         .word-front, .word-back {
-            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out; /* Default transition */
             position: absolute;
             top: 0;
             left: 0;
@@ -112,20 +112,26 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background-color: white;
-            border-radius: 10px;
-            backface-visibility: hidden;
+            background-color: white; /* Ensure background for covering */
+            border-radius: 10px; /* Match card's border radius */
+            backface-visibility: hidden; /* Hide the back of the element during rotation */
+        }
+
+        /* CSS to disable transition when auto mode is active */
+        .card.auto-mode-active .word-front,
+        .card.auto-mode-active .word-back {
+            transition: none !important; 
         }
 
         .word-back.hidden {
             opacity: 0;
-            pointer-events: none;
-            transform: rotateY(180deg);
+            pointer-events: none; /* Prevent interaction when hidden */
+            transform: rotateY(180deg); /* Rotate away */
         }
         .word-front.hidden {
-             opacity: 0;
-            pointer-events: none;
-            transform: rotateY(-180deg);
+            opacity: 0;
+            pointer-events: none; /* Prevent interaction when hidden */
+            transform: rotateY(-180deg); /* Rotate away */
         }
 
 
@@ -178,7 +184,7 @@
             font-size: 1.2rem;
             margin: 1rem 0;
             font-weight: bold;
-            min-height: 40px;
+            min-height: 40px; /* To prevent layout shift */
         }
 
         .score {
@@ -219,7 +225,7 @@
         }
         
         .answer-input button {
-            flex-grow: 0;
+            flex-grow: 0; /* Prevent button from growing too much */
         }
 
         /* Auto 모드 속도 조절 UI 스타일 */
@@ -289,12 +295,13 @@
                 gap: 0.5rem;
             }
             .menu button {
-                 width: calc(50% - 0.25rem);
-                 margin-bottom: 0.5rem;
-                 font-size: 0.9rem;
-                 padding: 0.6rem 1rem;
+                width: calc(50% - 0.25rem); /* Two buttons per row with gap */
+                margin-bottom: 0.5rem;
+                font-size: 0.9rem;
+                padding: 0.6rem 1rem;
             }
-             .menu button:last-child:nth-child(odd) {
+            /* If odd number of buttons, make the last one full width */
+            .menu button:last-child:nth-child(odd) {
                 width: 100%;
             }
 
@@ -317,7 +324,7 @@
             }
 
             .options {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr; /* Single column for options */
                 gap: 0.5rem;
             }
             .option {
@@ -329,7 +336,7 @@
                 align-items: stretch;
             }
             #userAnswer {
-                max-width: none;
+                max-width: none; /* Allow full width */
                 width: 100%;
                 margin-bottom: 0.5rem;
             }
@@ -337,13 +344,15 @@
                 width: 100%;
             }
 
+            /* Make study/quiz buttons full width on small screens */
             #studySection button, 
             #quizSection #nextQuiz, 
             #writeSection #nextWriteQuiz {
                 width: 100%;
                 margin-top: 0.5rem;
             }
-             #studySection button:first-of-type {
+            /* Remove top margin for the first button in study section if it's full width */
+            #studySection button:first-of-type {
                 margin-top: 0;
             }
             .speed-control-container input[type="range"] {
@@ -883,6 +892,7 @@
         // script.js content
         document.addEventListener('DOMContentLoaded', () => {
             const container = document.getElementById('game-container');
+            // Dynamically create the game's HTML structure
             container.innerHTML = `
                 <div class="menu">
                     <button id="studyMode">학습 모드</button>
@@ -938,7 +948,7 @@
             `;
 
             setupEventListeners();
-            showStudyMode();
+            showStudyMode(); // Initialize with study mode
         });
 
         let currentWordIndex = 0;
@@ -947,7 +957,7 @@
 
         let autoModeInterval = null;
         let isAutoModeRunning = false;
-        // AUTO_MODE_FRONT_DURATION 과 AUTO_MODE_BACK_DURATION 은 슬라이더 값에 따라 동적으로 설정됩니다.
+        // AUTO_MODE_FRONT_DURATION and AUTO_MODE_BACK_DURATION are dynamically set based on slider
 
         function setupEventListeners() {
             document.getElementById('studyMode').addEventListener('click', showStudyMode);
@@ -956,7 +966,7 @@
             
             const nextWordButton = document.getElementById('nextWord');
             nextWordButton.addEventListener('click', () => {
-                if(isAutoModeRunning) {
+                if(isAutoModeRunning) { // If auto mode is running, stop it first
                     stopAutoMode();
                 }
                 showNextWord();
@@ -964,7 +974,7 @@
 
             const flipCardButton = document.getElementById('flipCard');
             flipCardButton.addEventListener('click', () => {
-                if(isAutoModeRunning) {
+                if(isAutoModeRunning) { // If auto mode is running, stop it first
                     stopAutoMode();
                 }
                 flipCard();
@@ -977,10 +987,10 @@
             if (autoModeSpeedSlider && currentSpeedLabel) {
                 autoModeSpeedSlider.addEventListener('input', (event) => {
                     currentSpeedLabel.textContent = event.target.value;
-                    // Auto 모드가 실행 중일 때 속도를 변경하면, 다음 사이클부터 적용됩니다.
+                    // If auto mode is running, restart it with the new speed
                     if (isAutoModeRunning) {
-                        stopAutoMode(); // 현재 타이머 중지
-                        startAutoMode(); // 새 속도로 다시 시작 (버튼 텍스트 등 상태 유지)
+                        stopAutoMode(); // Stop current timer
+                        startAutoMode(); // Restart with new speed (maintains button text etc.)
                     }
                 });
             }
@@ -990,14 +1000,16 @@
             document.getElementById('checkAnswer').addEventListener('click', checkWriteAnswer);
             document.getElementById('nextWriteQuiz').addEventListener('click', showNextWriteQuiz);
             
+            // Add Enter key listener for 주관식 퀴즈
             const userAnswerInput = document.getElementById('userAnswer');
             if (userAnswerInput) {
                  userAnswerInput.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
                         const nextButton = document.getElementById('nextWriteQuiz');
+                        // If "다음 문제" button is visible, Enter triggers it
                         if (nextButton && !nextButton.classList.contains('hidden')) {
                             showNextWriteQuiz();
-                        } else {
+                        } else { // Otherwise, Enter triggers "정답 확인"
                             checkWriteAnswer();
                         }
                     }
@@ -1014,15 +1026,18 @@
         }
 
         function startAutoMode() {
-            if (isAutoModeRunning) return;
+            if (isAutoModeRunning) return; // Already running
 
+            // Ensure study section is visible and card is ready
             if (document.getElementById('studySection').classList.contains('hidden')) {
-                showStudyMode();
+                showStudyMode(); // Switch to study mode if not already
             } else {
+                // If card back is shown, flip to front first for consistent start
                 const wordBack = document.querySelector('#studySection .word-back');
                 if (wordBack && !wordBack.classList.contains('hidden')) { 
                     flipCard(); 
                 } else if (!document.getElementById('wordJapanese').textContent) { 
+                    // If no word is displayed, show one
                     showNextWord(); 
                 }
             }
@@ -1031,31 +1046,38 @@
             document.getElementById('toggleAutoStudyMode').textContent = 'Auto 모드 중지';
             document.getElementById('nextWord').disabled = true;
             document.getElementById('flipCard').disabled = true;
-            document.getElementById('autoModeSpeed').disabled = true; // 속도 슬라이더 비활성화
+            document.getElementById('autoModeSpeed').disabled = true; // Disable speed slider during auto mode
 
+            // Add class to card to disable transitions
+            const cardElement = document.querySelector('#studySection .card');
+            if (cardElement) {
+                cardElement.classList.add('auto-mode-active');
+            }
 
-            let showBackNext = true; 
-            const selectedSpeed = parseInt(document.getElementById('autoModeSpeed').value) * 1000; // 초를 밀리초로 변환
+            let showBackNext = true; // Determines if the next action is to show back or next word
+            const selectedSpeed = parseInt(document.getElementById('autoModeSpeed').value) * 1000; // Convert seconds to milliseconds
 
             function autoLoop() {
-                if (!isAutoModeRunning) return;
+                if (!isAutoModeRunning) return; // Stop if auto mode was turned off
 
                 if (showBackNext) {
-                    flipCard(); 
+                    flipCard(); // Show back of the card
                     showBackNext = false;
-                    autoModeInterval = setTimeout(autoLoop, selectedSpeed); 
+                    autoModeInterval = setTimeout(autoLoop, selectedSpeed); // Wait for selectedSpeed
                 } else {
-                    showNextWord(); 
+                    showNextWord(); // Show next word (front of the card)
                     showBackNext = true;
-                    autoModeInterval = setTimeout(autoLoop, selectedSpeed); 
+                    autoModeInterval = setTimeout(autoLoop, selectedSpeed); // Wait for selectedSpeed
                 }
             }
             
-             if (document.querySelector('#studySection .word-front:not(.hidden)')) { 
-                showBackNext = true; 
+            // Initial call to start the loop
+            // Ensure the card front is showing before starting the timed flip
+            if (document.querySelector('#studySection .word-front:not(.hidden)')) { 
+                showBackNext = true; // Next action is to show back
                 autoModeInterval = setTimeout(autoLoop, selectedSpeed);
-            } else { 
-                showNextWord(); 
+            } else { // If back is showing or card is in an intermediate state, reset and start
+                showNextWord(); // Show a new word (front)
                 showBackNext = true;
                 autoModeInterval = setTimeout(autoLoop, selectedSpeed);
             }
@@ -1077,15 +1099,21 @@
                 const flipCardButton = document.getElementById('flipCard');
                 if (flipCardButton) flipCardButton.disabled = false;
                 const autoModeSpeedSlider = document.getElementById('autoModeSpeed');
-                if (autoModeSpeedSlider) autoModeSpeedSlider.disabled = false; // 속도 슬라이더 활성화
+                if (autoModeSpeedSlider) autoModeSpeedSlider.disabled = false; // Enable speed slider
+
+                // Remove class from card to re-enable transitions
+                const cardElement = document.querySelector('#studySection .card');
+                if (cardElement) {
+                    cardElement.classList.remove('auto-mode-active');
+                }
             }
         }
 
         function showStudyMode() {
-            stopAutoMode(); 
+            stopAutoMode(); // Stop auto mode if it's running
             hideAllSections();
             document.getElementById('studySection').classList.remove('hidden');
-            showNextWord(); 
+            showNextWord(); // Display the first word
         }
 
         function showNextWord() {
@@ -1095,6 +1123,7 @@
             document.getElementById('wordReading').textContent = `읽는 법: ${word.reading}`;
             document.getElementById('wordKorean').textContent = `뜻: ${word.korean}`;
             
+            // Ensure card front is shown and back is hidden
             document.querySelector('#studySection .word-front').classList.remove('hidden');
             document.querySelector('#studySection .word-back').classList.add('hidden');
         }
@@ -1105,7 +1134,7 @@
         }
 
         function showQuizMode() {
-            stopAutoMode(); 
+            stopAutoMode(); // Stop auto mode if it's running
             hideAllSections();
             document.getElementById('quizSection').classList.remove('hidden');
             score = 0;
@@ -1116,7 +1145,7 @@
 
         function showNextQuiz() {
             const optionsContainer = document.querySelector('#quizSection .options');
-            optionsContainer.innerHTML = ''; 
+            optionsContainer.innerHTML = ''; // Clear previous options
             document.getElementById('result').textContent = '';
             document.getElementById('nextQuiz').classList.add('hidden');
 
@@ -1135,7 +1164,7 @@
         }
 
         function showWriteMode() {
-            stopAutoMode(); 
+            stopAutoMode(); // Stop auto mode if it's running
             hideAllSections();
             document.getElementById('writeSection').classList.remove('hidden');
             score = 0;
@@ -1149,10 +1178,10 @@
             const word = words[currentWordIndex];
             document.getElementById('writeWord').textContent = word.japanese;
             const userAnswerInput = document.getElementById('userAnswer');
-            if (userAnswerInput) userAnswerInput.value = '';
+            if (userAnswerInput) userAnswerInput.value = ''; // Clear previous answer
             document.getElementById('writeResult').textContent = '';
             document.getElementById('nextWriteQuiz').classList.add('hidden');
-            if (userAnswerInput) userAnswerInput.focus(); 
+            if (userAnswerInput) userAnswerInput.focus(); // Focus on input field
         }
 
         function checkWriteAnswer() {
@@ -1166,11 +1195,11 @@
 
             if (userAnswer === correctAnswer) {
                 resultElement.textContent = `정답입니다! (읽는 법: ${reading})`;
-                resultElement.style.color = '#4CAF50';
+                resultElement.style.color = '#4CAF50'; // Green for correct
                 score++;
             } else {
                 resultElement.textContent = `틀렸습니다. 정답은 "${correctAnswer}" (읽는 법: ${reading}) 입니다.`;
-                resultElement.style.color = '#f44336';
+                resultElement.style.color = '#f44336'; // Red for incorrect
             }
             totalQuestions++;
             updateWriteScore();
@@ -1195,23 +1224,23 @@
 
         function getRandomAnswers(correctWord) {
             const answers = [{ korean: correctWord.korean, reading: correctWord.reading }];
-            const usedIndices = new Set([currentWordIndex]); 
+            const usedIndices = new Set([currentWordIndex]); // Keep track of used words to avoid duplicates
 
-            while (answers.length < 4) {
+            while (answers.length < 4) { // We need 3 more incorrect answers
                 const randomIndex = Math.floor(Math.random() * words.length);
-                if (!usedIndices.has(randomIndex)) { 
+                if (!usedIndices.has(randomIndex)) { // Ensure the word is not the correct one or already picked
                     const randomWord = words[randomIndex];
                     answers.push({ korean: randomWord.korean, reading: randomWord.reading });
                     usedIndices.add(randomIndex);
                 }
             }
-            return shuffleArray(answers); 
+            return shuffleArray(answers); // Shuffle the answers
         }
         
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
+                [array[i], array[j]] = [array[j], array[i]]; // Swap elements
             }
             return array;
         }
@@ -1220,15 +1249,17 @@
             const optionButtons = document.querySelectorAll('#quizSection .option');
             const resultElement = document.getElementById('result');
             
+            // Disable all option buttons after an answer is selected
             optionButtons.forEach(option => option.disabled = true); 
             
             if (selectedAnswer === correctWord.korean) {
-                buttonElement.style.backgroundColor = '#4CAF50'; 
+                buttonElement.style.backgroundColor = '#4CAF50'; // Green for correct
                 resultElement.innerHTML = `정답입니다!<br><span style="font-size: 0.9em; color: #666;">읽는 법: ${correctWord.reading}</span>`;
                 resultElement.style.color = '#4CAF50';
                 score++;
             } else {
-                buttonElement.style.backgroundColor = '#f44336'; 
+                buttonElement.style.backgroundColor = '#f44336'; // Red for incorrect
+                // Highlight the correct answer
                 optionButtons.forEach(option => { 
                     if (option.textContent === correctWord.korean) {
                         option.style.backgroundColor = '#4CAF50';
@@ -1240,7 +1271,7 @@
             
             totalQuestions++;
             updateScore();
-            document.getElementById('nextQuiz').classList.remove('hidden'); 
+            document.getElementById('nextQuiz').classList.remove('hidden'); // Show "다음 문제" button
         }
     </script>
 </body>
